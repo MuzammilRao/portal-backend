@@ -1,0 +1,29 @@
+{
+    "root": true,
+    "parserOptions": {
+      "ecmaVersion": 12,
+      "sourceType": "module"
+    },
+    "extends": ["airbnb", "prettier", "plugin:node/recommended"],
+    "plugins": ["prettier"],
+    "env": {
+      "es2021": true,
+      "node": true
+    },
+    "rules": {
+      "no-console": "error",
+      "prettier/prettier": "error",
+      "spaced-comment": "warn",
+      "consistent-return": "warn",
+      "func-names": "warn",
+      "object-shorthand": "warn",
+      "no-process-exit": "warn",
+      "no-param-reassign": "warn",
+      "no-return-await": "warn",
+      "no-underscore-dangle": "warn",
+      "class-methods-use-this": "error",
+      "prefer-destructuring": ["error", { "object": true, "array": false }],
+      "no-unused-vars": ["error", { "argsIgnorePattern": "req|res|next|val" }]
+    }
+  }
+  

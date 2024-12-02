@@ -1,0 +1,4 @@
+config.env
+tmp
+.cache
+node_modules

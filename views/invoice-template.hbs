@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Invoice</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+
+<body>
+
+    <div class="container-fluid  ">
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div class="col-md-5">
+                        <img src="{{logo}}" width="200px" class="img-fluid mb-3" alt="Brand Logo">
+                        <div>
+                            <h4>{{brandName}}</h4>
+                            <p class="my-0">{{brandAddress}}</p>
+                            <p class="my-0">{{brandCity}}, {{brandState}} {{brandZip}}</p>
+                            <p class="my-0">{{brandCountry}}</p>
+                        </div>
+
+                        <div class="my-4">
+                            <h4>Bill To</h4>
+                            <p class="my-0">{{clientBusinessName}}</p>
+                            <p class="my-0">{{clientName}}</p>
+                            <p class="my-0">{{clientAddress}}</p>
+                            <p class="my-0">{{clientCity}}, {{clientZip}}, {{clientCountry}}</p>
+                        </div>
+                    </div>
+
+
+                    <div class="col-md-5 d-flex flex-column pt-5 ">
+                        <div class="text-end mt-12">
+                            <h2 class="fw-bold fs-4">Invoice</h2>
+                            <p class="my-0 text-end">{{invoiceNumber}}</p>
+
+                            <div class="mt-4">
+                                <h2 class="fw-bold fs-5">Balance Due</h2>
+                                <p class="my-0 text-end">{{currency}} {{totalDue}}</p>
+                            </div>
+                        </div>
+
+                        <div class="my-4 pt-5">
+                            <div class="d-flex flex-column gap-2">
+                                <div class="d-flex justify-content-between gap-2 align-items-baseline">
+                                    <p class="flex-shrink-0">Date</p>
+                                    <p class="my-0 text-end">{{invoiceDate}}</p>
+                                </div>
+                                <div class="d-flex justify-content-between gap-2 align-items-baseline">
+                                    <p class="flex-shrink-0">Due Date</p>
+                                    <p class="my-0 text-end">{{invoiceDueDate}}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table mt-4">
+                        <thead>
+                            <tr>
+                                <th scope="col">Item Description</th>
+                                <th scope="col">Qty</th>
+                                <th scope="col">Rate</th>
+                                <th scope="col">Amount</th>
+                            </tr>
+                        <tbody>
+                            {{#each productLines }}
+                            <tr>
+                                <td>{{this.description}}</td>
+                                <td>{{this.quantity}}</td>
+                                <td>{{this.rate}}</td>
+                                <td>{{currency}} {{multiplyFunction this.quantity this.rate}}</td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Total and Terms Section -->
+                <div class=" d-flex justify-content-end">
+                    <div class="d-flex flex-column">
+                        <div class="d-flex justify-content-between gap-2">
+                            <p class="my-0">Subtotal</p>
+                            <p class="my-0">{{currency}} {{subTotal}}</p>
+                        </div>
+                        <div class="d-flex justify-content-between gap-2">
+                            <p class="my-0">Tax</p>
+                            <div class="d-flex align-items-baseline mr-2">
+                                <p class="my-0">{{taxPercent}}%</p>
+                            </div>
+                            <p class="my-0">{{currency}} {{taxAmount}}</p>
+                        </div>
+                        <hr class="my-4">
+                        <div class="d-flex justify-content-between gap-2">
+                            <p class="my-0">Total</p>
+                            <p class="my-0">{{currency}} {{totalDue}}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terms and Conditions -->
+                <div class="my-2">
+                    <p class="my-0">Terms and Conditions</p>
+                    <p class="my-0">{{terms}}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (Optional) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
