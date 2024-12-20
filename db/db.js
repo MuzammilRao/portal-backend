@@ -4,6 +4,7 @@ const { config } = require('../config');
 const { exit } = require('process');
 
 const MONGO_URI = config.NODE_ENV === 'development' ? config.LOCAL_MONGO_URI : config.MONGO_URI;
+// console.log(MONGO_URI);
 
 exports.connectDB = () => {
   mongoose

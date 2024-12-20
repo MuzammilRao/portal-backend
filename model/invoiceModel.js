@@ -38,6 +38,8 @@ const invoiceSchema = new mongoose.Schema(
       set: (value) => parseFloat(value.toFixed(2)),
     },
     currency: { type: String },
+    currencyCode: { type: String },
+
     notes: { type: String },
     terms: { type: String },
     status: { type: String, default: 'unpaid', enum: ['unpaid', 'paid'] },
