@@ -39,6 +39,7 @@ exports.getLogs = CatchAsync(async (req, res, next) => {
 
   if (userId) filter.user = userId;
   if (action) filter.action = action;
+  req.query.limit=100
   if (startDate && endDate) {
     filter.timestamp = {
       $gte: new Date(startDate),

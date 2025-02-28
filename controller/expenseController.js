@@ -72,6 +72,71 @@ exports.getOpeningBalances = CatchAsync(async (req, res, next) => {
   });
 });
 
+// NEW FUNCTION: Delete Opening Balance
+exports.deleteOpeningBalance = CatchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  // const { adjustFutureMonths = true } = req.query;
+
+  let adjustFutureMonths = true;
+  if (!id) {
+    return next(new AppError('Opening Balance ID is required', 400));
+  }
+
+  const openingBalance = await OpeningBalance.findById(id);
+  if (!openingBalance) {
+    return next(new AppError('Opening Balance not found', 404));
+  }
+
+  // Get the month and year of the opening balance
+  const { month, year, totalOpeningBalance } = openingBalance;
+  
+  // Check if there are future months that might be affected
+  const nextMonth = month === 12 ? 1 : month + 1;
+  const nextYear = month === 12 ? year + 1 : year;
+  
+  const futureBalanceExists = await OpeningBalance.findOne({ 
+    month: nextMonth, 
+    year: nextYear 
+  });
+
+  if (futureBalanceExists && !adjustFutureMonths) {
+    return next(new AppError(
+      'This opening balance may affect future months. Set adjustFutureMonths=true to delete and adjust future records.', 
+      400
+    ));
+  }
+
+  // If we're adjusting future months, calculate the current month's remaining balance
+  if (adjustFutureMonths && futureBalanceExists) {
+    // Calculate remaining balance for current month
+    const currentMonthExpenses = await Expense.find({ month, year });
+    const totalExpenses = currentMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const remainingBalance = totalOpeningBalance - totalExpenses;
+    
+    // Adjust the next month's opening balance
+    const adjustmentAmount = -remainingBalance; // Subtract what would have carried over
+    
+    // Update the next month's opening balance
+    futureBalanceExists.totalOpeningBalance += adjustmentAmount;
+    futureBalanceExists.history.push({
+      amount: adjustmentAmount,
+      date: new Date(),
+      note: `Automatic adjustment due to deletion of previous month's opening balance`
+    });
+    
+    await futureBalanceExists.save();
+  }
+
+  // Now safe to delete the opening balance
+  await OpeningBalance.findByIdAndDelete(id);
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Opening Balance deleted successfully',
+    adjustedFutureMonths: adjustFutureMonths && futureBalanceExists ? true : false
+  });
+});
+
 exports.addExpense = CatchAsync(async (req, res, next) => {
   const { title, amount, category, file } = req.body;
 
@@ -160,65 +225,40 @@ exports.getAllExpenses = CatchAsync(async (req, res, next) => {
   });
 });
 
-// exports.updateExpense = CatchAsync(async (req, res, next) => {
-//   const { id } = req.params; // Expense ID
-//   const { title, amount, category } = req.body;
+// NEW FUNCTION: Delete Expense
+exports.deleteExpense = CatchAsync(async (req, res, next) => {
+  const { id } = req.params;
 
-//   if (!id) {
-//     return next(new AppError('Expense ID is required', 400));
-//   }
+  if (!id) {
+    return next(new AppError('Expense ID is required', 400));
+  }
 
-//   // Find the expense to be updated
-//   const expense = await Expense.findById(id);
-//   if (!expense) {
-//     return next(new AppError('Expense not found', 404));
-//   }
+  const expense = await Expense.findById(id);
+  if (!expense) {
+    return next(new AppError('Expense not found', 404));
+  }
+  
+  // If the expense has a file, delete it from Cloudinary
+  if (expense.file) {
+    try {
+      // Extract the public_id from the file URL
+      const urlParts = expense.file.split('/');
+      const filename = urlParts[urlParts.length - 1].split('.')[0];
+      
+      await cloudinary.uploader.destroy(filename);
+    } catch (error) {
+      // Continue with expense deletion even if file deletion fails
+      console.error('Error deleting file from Cloudinary:', error);
+    }
+  }
 
-//   const previousAmount = expense.amount;
-//   const previousMonth = expense.month;
-//   const previousYear = expense.year;
+  await Expense.findByIdAndDelete(id);
 
-//   // Update expense fields
-//   expense.title = title || expense.title;
-//   expense.amount = amount || expense.amount;
-//   expense.category = category || expense.category;
-//   await expense.save();
-
-//   // Check if the amount has changed
-//   // if (previousAmount !== expense.amount) {
-//   //   const amountDifference = expense.amount - previousAmount;
-
-//   //   // Adjust balances for the affected month and subsequent months
-//   //   let currentMonth = previousMonth;
-//   //   let currentYear = previousYear;
-
-//   //   while (true) {
-//   //     const openingBalance = await OpeningBalance.findOne({
-//   //       month: currentMonth,
-//   //       year: currentYear,
-//   //     });
-
-//   //     if (!openingBalance) break;
-
-//   //     openingBalance.totalOpeningBalance -= amountDifference;
-//   //     openingBalance.history.push({
-//   //       amount: -amountDifference,
-//   //       date: new Date(),
-//   //     });
-
-//   //     await openingBalance.save();
-
-//   //     // Move to the next month
-//   //     currentMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-//   //     currentYear = currentMonth === 1 ? currentYear + 1 : currentYear;
-//   //   }
-//   // }
-
-//   res.status(200).json({
-//     status: 'success',
-//     data: { expense },
-//   });
-// });
+  res.status(200).json({
+    status: 'success',
+    message: 'Expense deleted successfully',
+  });
+});
 
 exports.updateExpense = CatchAsync(async (req, res, next) => {
   const { id } = req.params; // Expense ID
@@ -289,6 +329,44 @@ exports.getOverviewReport = CatchAsync(async (req, res, next) => {
       totalExpenses,
       remainingBalance,
       // expensesByCategory,
+    },
+  });
+});
+
+// Update to include expenses by category
+exports.getOverviewReportWithCategories = CatchAsync(async (req, res, next) => {
+  const currentDate = new Date();
+  const month = req.query.month ? parseInt(req.query.month) : currentDate.getMonth() + 1;
+  const year = req.query.year ? parseInt(req.query.year) : currentDate.getFullYear();
+
+  const openingBalance = await OpeningBalance.find({ month, year });
+  let monthlyOpeningBalance = openingBalance.reduce((sum, op) => sum + op.totalOpeningBalance, 0);
+
+  // Get expenses and populate categories
+  const expenses = await Expense.find({ month, year }).populate('category');
+  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+  // Group expenses by category
+  const expensesByCategory = {};
+  expenses.forEach(expense => {
+    const categoryName = expense.category ? expense.category.name : 'Uncategorized';
+    if (!expensesByCategory[categoryName]) {
+      expensesByCategory[categoryName] = 0;
+    }
+    expensesByCategory[categoryName] += expense.amount;
+  });
+
+  const remainingBalance = monthlyOpeningBalance - totalExpenses;
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      month,
+      year,
+      openingBalance: monthlyOpeningBalance,
+      totalExpenses,
+      remainingBalance,
+      expensesByCategory,
     },
   });
 });
@@ -393,29 +471,31 @@ exports.getMonthlySummary = async (req, res, next) => {
     });
   }
 };
-//   // // Prepare a detailed report of expenses grouped by category
-// const expensesByCategory = await Expense.aggregate([
-//   { $match: { month, year } },
-//   {
-//     $group: {
-//       _id: '$category',
-//       totalAmount: { $sum: '$amount' },
-//       expenses: { $push: '$$ROOT' }, // Include all expense details in the group
-//     },
-//   },
-//   {
-//     $lookup: {
-//       from: 'expensecategories', // Match the name of your category collection
-//       localField: '_id',
-//       foreignField: '_id',
-//       as: 'categoryDetails',
-//     },
-//   },
-//   {
-//     $project: {
-//       category: { $arrayElemAt: ['$categoryDetails.name', 0] },
-//       totalAmount: 1,
-//       expenses: 1,
-//     },
-//   },
-// ]);
+
+// NEW FUNCTION: Delete a category
+exports.deleteCategory = CatchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return next(new AppError('Category ID is required', 400));
+  }
+
+  // Check if category exists
+  const category = await ExpenseCategory.findById(id);
+  if (!category) {
+    return next(new AppError('Category not found', 404));
+  }
+
+  // Check if category is being used by any expenses
+  const categoryInUse = await Expense.findOne({ category: id });
+  if (categoryInUse) {
+    return next(new AppError('Cannot delete category that is being used by expenses', 400));
+  }
+
+  await ExpenseCategory.findByIdAndDelete(id);
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Category deleted successfully',
+  });
+});
