@@ -134,10 +134,10 @@ exports.processPayment = CatchAsync(async (req, res, next) => {
     country_code,
     store_name,
   };
-
+  // 'https://stagging-server786.com/moneris-payments/payment3.php',
   try {
     const response = await axios.post(
-      'https://stagging-server786.com/moneris-payments/payment3.php',
+      'https://blogbrowser.com/moneris/payment3.php',
       paymentPayload,
       {
         headers: { 'Content-Type': 'application/json' },
