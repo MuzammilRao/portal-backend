@@ -8,12 +8,9 @@ const CatchAsync = require('../../utils/CatchAsync');
 
 exports.createPaymentIntentWI = CatchAsync(async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip;
-  console.log('---IP', req.ip);
-  // Lookup IP location
-  const geo = geoip.lookup(ip);
-  console.log(`Geo Info for IP (${ip}):`, geo);
 
-  // Define allowed countries
+  const geo = geoip.lookup(ip);
+
   const allowedCountries = ['US', 'CA', 'GB']; // ISO country codes for US, Canada, and UK
 
   if (!geo || !allowedCountries.includes(geo.country)) {
@@ -37,19 +34,18 @@ exports.createPaymentIntentWI = CatchAsync(async (req, res, next) => {
     { customer: customer.id },
     { apiVersion: '2022-08-01' },
   );
-  console.log('default', Math.imul(req.body.amount, 100));
-  const paymentIntent = await WI_STRIPE.paymentIntents.create({
+  const paymentIntent = await WIZ_PUB.paymentIntents.create({
     amount: Math.imul(req.body.amount, 100),
-    currency: 'usd',
+    currency: req.body.currencyCode,
     customer: customer.id,
     automatic_payment_methods: { enabled: true },
+    description: `Payment for Client ${req.body.email}`,
   });
 
   if (!paymentIntent || !customer || !ephemeralKey) {
     return next(new AppError('Error while creating payment', 500));
   }
 
-  // Return the secret
   res.status(200).json({
     paymentIntent,
     ephemeralKey: ephemeralKey.secret,
@@ -59,16 +55,13 @@ exports.createPaymentIntentWI = CatchAsync(async (req, res, next) => {
 
 exports.createPaymentIntentWizPub = CatchAsync(async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip;
-  console.log('---IP', req.ip);
-  // Lookup IP location
-  const geo = geoip.lookup(ip);
-  console.log(`Geo Info for IP (${ip}):`, geo);
 
-  // Define allowed countries
-  const allowedCountries = ['US', 'CA', 'GB']; // ISO country codes for US, Canada, and UK
+  const geo = geoip.lookup(ip);
+
+  const allowedCountries = ['US', 'CA', 'GB'];
 
   if (!geo || !allowedCountries.includes(geo.country)) {
-    return next(new AppError('Location Blocked', 403)); // Use 403 Forbidden for blocked location
+    return next(new AppError('Location Blocked', 403));
   }
 
   const customer = await WIZ_PUB.customers.create({
@@ -88,12 +81,13 @@ exports.createPaymentIntentWizPub = CatchAsync(async (req, res, next) => {
     { customer: customer.id },
     { apiVersion: '2022-08-01' },
   );
-  console.log('default', Math.imul(req.body.amount, 100));
+  // console.log('default', Math.imul(req.body.amount, 100));
   const paymentIntent = await WIZ_PUB.paymentIntents.create({
     amount: Math.imul(req.body.amount, 100),
-    currency: 'usd',
+    currency: req.body.currencyCode,
     customer: customer.id,
     automatic_payment_methods: { enabled: true },
+    description: `Payment for Client ${req.body.email}`,
   });
 
   if (!paymentIntent || !customer || !ephemeralKey) {
