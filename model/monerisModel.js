@@ -14,11 +14,7 @@ const paymentSchema = new mongoose.Schema(
       type: String,
       //   required: true,
     },
-    expiry_date: {
-      type: String,
-      //   required: true,
-    },
-    cvc: { type: String },
+
     first_name: {
       type: String,
     },
