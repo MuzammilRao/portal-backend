@@ -40,7 +40,7 @@ exports.deleteOne = (Model) =>
     }
 
     // Log the hard delete action
-    if(!!req?.user){
+    if (!!req?.user) {
       await logAction(req.user._id, LOG_ACTIONS.DELETE, Model.modelName, doc._id, {
         deleted: true,
       });
@@ -80,42 +80,42 @@ exports.updateOne = (Model) =>
       runValidators: true,
     });
 
-  if(!!user || !!req.user){
-    const changes = {};
+    if (!!user || !!req.user) {
+      const changes = {};
 
-    Object.keys(req.body).forEach((key) => {
-      const originalValue = originalDoc[key];
-      const newValue = req.body[key];
+      Object.keys(req.body).forEach((key) => {
+        const originalValue = originalDoc[key];
+        const newValue = req.body[key];
 
-      if (
-        key === '_id' ||
-        key === 'createdAt' ||
-        key === 'updatedAt' ||
-        _.isEqual(originalValue, newValue) ||
-        (Array.isArray(newValue) && newValue.length === 0 && originalValue === undefined) ||
-        (newValue === '' && originalValue === undefined) ||
-        (typeof newValue === 'object' && newValue._id)
-      ) {
-        return;
+        if (
+          key === '_id' ||
+          key === 'createdAt' ||
+          key === 'updatedAt' ||
+          _.isEqual(originalValue, newValue) ||
+          (Array.isArray(newValue) && newValue.length === 0 && originalValue === undefined) ||
+          (newValue === '' && originalValue === undefined) ||
+          (typeof newValue === 'object' && newValue._id)
+        ) {
+          return;
+        }
+
+        // Capture only actual changes
+        changes[key] = {
+          from: originalValue,
+          to: newValue,
+        };
+      });
+
+      if (Object.keys(changes).length > 0 && user) {
+        await logAction(user._id, LOG_ACTIONS.UPDATE, Model.modelName, updatedDoc._id, changes);
       }
-
-      // Capture only actual changes
-      changes[key] = {
-        from: originalValue,
-        to: newValue,
-      };
-    });
-
-
-    if (Object.keys(changes).length > 0 && user) {
-      await logAction(user._id, LOG_ACTIONS.UPDATE, Model.modelName, updatedDoc._id, changes);
     }
-  }
     return res.status(200).json({
       status: 'success',
       data: updatedDoc,
     });
   });
+
 exports.updateOneWithSave = (Model) =>
   catchAsync(async (req, res, next) => {
     const doc = await Model.findById(req.params.id);
@@ -166,8 +166,8 @@ exports.getOne = (Model, ...populations) =>
       return next(new AppError('No document found with that ID', 404));
     }
 
-   if(!!req?.user){
-     await logAction(req.user._id, LOG_ACTIONS.VIEWED, Model.modelName, doc._id);
+    if (!!req?.user) {
+      await logAction(req.user._id, LOG_ACTIONS.VIEWED, Model.modelName, doc._id);
     }
 
     return res.status(200).json({

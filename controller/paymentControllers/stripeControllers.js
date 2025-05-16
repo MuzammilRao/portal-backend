@@ -13,9 +13,9 @@ exports.createPaymentIntentWI = CatchAsync(async (req, res, next) => {
     const geo = geoip.lookup(ip);
     const allowedCountries = ['US', 'CA', 'GB'];
 
-    if (!geo || !allowedCountries.includes(geo.country)) {
-      return next(new AppError('Location Blocked', 403));
-    }
+    // if (!geo || !allowedCountries.includes(geo.country)) {
+    //   return next(new AppError('Location Blocked', 403));
+    // }
 
     // Set default values for address fields if not provided
     const defaultAddress = {
@@ -156,9 +156,9 @@ exports.createPaymentIntentWizPub = CatchAsync(async (req, res, next) => {
     const geo = geoip.lookup(ip);
     const allowedCountries = ['US', 'CA', 'GB'];
 
-    if (!geo || !allowedCountries.includes(geo.country)) {
-      return next(new AppError('Location Blocked', 403));
-    }
+    // if (!geo || !allowedCountries.includes(geo.country)) {
+    //   return next(new AppError('Location Blocked', 403));
+    // }
 
     // Set default values for address fields if not provided
     const defaultAddress = {

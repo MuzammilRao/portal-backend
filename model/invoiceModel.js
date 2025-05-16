@@ -29,6 +29,7 @@ const invoiceSchema = new mongoose.Schema(
         rate: { type: String },
       },
     ],
+
     taxPercent: { type: String },
     taxAmount: { type: Number },
     subTotal: { type: Number },
@@ -44,6 +45,10 @@ const invoiceSchema = new mongoose.Schema(
     terms: { type: String },
     status: { type: String, default: 'unpaid', enum: ['unpaid', 'paid'] },
     merchant: { type: String, required: [true, 'Merchant  is Required'] },
+    template: {
+      type: String,
+      defualt: 'none',
+    },
     // merchant: {
     //   type: mongoose.Schema.Types.ObjectId,
     //   ref: 'Merchant',
