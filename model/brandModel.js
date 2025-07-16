@@ -14,7 +14,7 @@ const brandSchema = new mongoose.Schema(
     },
     address: { type: String, required: true },
     city: { type: String, required: true },
-    zip: { type: Number, required: true },
+    zip: { type: String, required: true },
     state: { type: String, required: true },
     country: { type: String, required: true },
     textColorPrimary: { type: String, default: '#141414' },
@@ -31,6 +31,10 @@ const brandSchema = new mongoose.Schema(
       type: String,
       default:
         'https://st3.depositphotos.com/23594922/31822/v/450/depositphotos_318221368-stock-illustration-missing-picture-page-for-website.jpg',
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true },

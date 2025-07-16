@@ -181,6 +181,7 @@ exports.getAll = (Model, filter = {}, search = [], ...populations) =>
     if (filter.user === 'user._id') {
       filter = { ...filter, user: req.user._id };
     }
+    filter.isDeleted = false;
     let query = Model.find(filter);
 
     populations.forEach((populate, index) => {
