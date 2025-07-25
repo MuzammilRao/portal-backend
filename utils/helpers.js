@@ -14,8 +14,8 @@ exports.sendEmail = (mailOptions) => {
     port: 465,
 
     auth: {
-      user: 'invoiceapp0@gmail.com',
-      pass: 'juqkiexfrrjuaawf',
+      user: 'info@webinventix.com',
+      pass: 'ilbuaeenzblmfepb',
     },
   });
 

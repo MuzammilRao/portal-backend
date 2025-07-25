@@ -17,6 +17,9 @@ const { config } = require('../config');
 const cloudinary = require('../utils/cloudinary');
 const APIFeatures = require('../utils/APIFeatures');
 const Merchants = require('../model/MerchantsModel');
+const catchAsync = require('../utils/CatchAsync');
+const { logAction } = require('../utils/Logging');
+const { LOG_ACTIONS } = require('../constants');
 
 exports.sendInvitation = CatchAsync(async (req, res, next) => {
   const { email } = req.body;
@@ -266,13 +269,71 @@ exports.createInvoice = CatchAsync(async (req, res, next) => {
   });
 });
 
-exports.getInvoices = Factory.getAll(
-  Invoice,
-  { isDeleted: false },
-  ['brandName', 'clientName', 'clientEmail', 'invoiceNumber', 'status'],
-  'user',
-  'email name ',
-);
+// exports.getInvoices = Factory.getAll(
+//   Invoice,
+//   { isDeleted: false },
+//   ['brandName', 'clientName', 'clientEmail', 'invoiceNumber', 'status'],
+//   'user',
+//   'email name ',
+// );
+exports.getInvoices = catchAsync(async (req, res, next) => {
+  // Base filter - only non-deleted invoices
+  const filter = { isDeleted: false };
+
+  // Get user with role
+  const user = await User.findById(req.user._id).populate('role');
+
+  // Apply user filter if not admin
+  if (user.role.name !== 'Admin') {
+    filter.user = req.user._id;
+  }
+
+  // Handle filters from query params
+  if (req.query.filters && req.query.filters.status) {
+    filter.status = req.query.filters.status;
+  }
+  // Alternative format support
+  else if (req.query.status) {
+    filter.status = req.query.status;
+  }
+
+  // Handle search parameter
+  if (req.query.search) {
+    const searchRegex = new RegExp(req.query.search, 'i');
+    filter.$or = [
+      { invoiceNumber: searchRegex },
+      { clientName: searchRegex },
+      { clientEmail: searchRegex },
+      { brandName: searchRegex },
+    ];
+  }
+
+  // Debug: log the final filter
+  console.log('Final MongoDB filter:', JSON.stringify(filter, null, 2));
+
+  // Build and execute query
+  const invoices = await Invoice.find(filter)
+    .populate('user', 'email name')
+    .populate({
+      path: 'user',
+      populate: { path: 'role', select: 'name' },
+    })
+    .select('brandName clientName clientEmail invoiceNumber status createdAt merchant totalDue')
+    .sort(req.query.sort || '-createdAt')
+    .skip((parseInt(req.query.page, 10) - 1 || 0) * (parseInt(req.query.limit, 10) || 50))
+    .limit(parseInt(req.query.limit, 10) || 50);
+
+  const total = await Invoice.countDocuments(filter);
+
+  await logAction(req.user._id, LOG_ACTIONS.READ, 'Invoice', null);
+
+  res.status(200).json({
+    status: 'success',
+    total,
+    results: invoices.length,
+    data: invoices,
+  });
+});
 exports.getInvoice = Factory.getOne(Invoice);
 exports.updateInvoice = Factory.updateOne(Invoice);
 exports.deleteInvoice = Factory.softDelete(Invoice);
