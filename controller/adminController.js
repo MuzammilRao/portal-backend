@@ -284,7 +284,11 @@ exports.getInvoices = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.user._id).populate('role');
 
   // Apply user filter if not admin
-  if (user.role.name !== 'Admin') {
+  if (
+    user.role.name !== 'Admin' &&
+    user.role.name !== 'super-admin' &&
+    user.role.name !== 'sub-admin'
+  ) {
     filter.user = req.user._id;
   }
 
