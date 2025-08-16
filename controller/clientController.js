@@ -38,8 +38,7 @@ exports.getAllClients = CatchAsync(async (req, res, next) => {
   const features = new APIFeatures(query, req.query, search)
     .filter()
     .sort()
-    .limitFields()
-    .paginate();
+    .limitFields();
 
   const doc = await features.query;
 
