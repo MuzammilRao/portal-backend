@@ -34,6 +34,7 @@ const clientSchema = new mongoose.Schema(
     phone: String,
     country: {
       type: String,
+      required: true
     },
     countryCode: {
       type: String,
