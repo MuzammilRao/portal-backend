@@ -201,7 +201,7 @@ exports.approveUser = CatchAsync(async (req, res, next) => {
 exports.getUsers = Factory.getAll(User, { isDeleted: false }, ['name', 'email', 'pseudo'], 'role');
 exports.getUser = Factory.getOne(User);
 exports.updateUser = Factory.updateOne(User);
-exports.deleteUser = Factory.softDelete(User);
+exports.deleteUser = Factory.deleteOne(User);
 
 // Clients
 // exports.createClient = Factory.createOne(Client);
