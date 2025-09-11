@@ -41,7 +41,7 @@ exports.createPaymentIntentWI = CatchAsync(async (req, res, next) => {
 
     // Use provided fields or defaults
     const firstName = req.body.firstName || 'Customer';
-    // const email = req.body.email || 'customer@webinventix.com';
+    const email = req.body.email || '';
     const address = req.body.address || defaultAddress.line1;
     const city = req.body.city || defaultAddress.city;
     const zip = req.body.zip || defaultAddress.postal_code;
@@ -52,7 +52,7 @@ exports.createPaymentIntentWI = CatchAsync(async (req, res, next) => {
     let customer;
     try {
       const customers = await WI_STRIPE.customers.list({
-        // email: req.body.email,
+         email: req.body.email,
         limit: 1,
       });
 
@@ -74,7 +74,7 @@ exports.createPaymentIntentWI = CatchAsync(async (req, res, next) => {
         // Create new customer if not found
         customer = await WI_STRIPE.customers.create({
           name: firstName,
-          // email: email,
+          email: req.body.email,
           address: {
             line1: address,
             city: city,
@@ -194,6 +194,7 @@ exports.createPaymentIntentWizPub = CatchAsync(async (req, res, next) => {
     let customer;
     try {
       const customers = await WIZ_PUB.customers.list({
+        email: req.body.email,
         // No email filter
         limit: 1,
       });
@@ -215,6 +216,7 @@ exports.createPaymentIntentWizPub = CatchAsync(async (req, res, next) => {
       } else {
         // Create new customer if not found
         customer = await WIZ_PUB.customers.create({
+          email: req.body.email,
           name: firstName,
           address: {
             line1: address,
