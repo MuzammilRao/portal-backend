@@ -194,7 +194,7 @@ exports.createPaymentIntentWizPub = CatchAsync(async (req, res, next) => {
     let customer;
     try {
       const customers = await WIZ_PUB.customers.list({
-        email: req.body.email,
+        email: req.body.email || '',
         // No email filter
         limit: 1,
       });
@@ -216,7 +216,7 @@ exports.createPaymentIntentWizPub = CatchAsync(async (req, res, next) => {
       } else {
         // Create new customer if not found
         customer = await WIZ_PUB.customers.create({
-          email: req.body.email,
+          email: req.body.email || '',
           name: firstName,
           address: {
             line1: address,
@@ -250,7 +250,7 @@ exports.createPaymentIntentWizPub = CatchAsync(async (req, res, next) => {
         currency: req.body.currencyCode,
         customer: customer.id,
         automatic_payment_methods: { enabled: true },
-        description: `Payment for Client ${req.body.email}`,
+        description: `Payment for Client ${req.body.email || ''}`,
       });
     } catch (error) {
       return next(new AppError(`Error creating payment intent: ${error.message}`, 500));
