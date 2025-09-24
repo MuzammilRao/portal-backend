@@ -73,6 +73,7 @@ exports.updateRefunds = Factory.updateOne(Refund);
 exports.getUserMerchants = CatchAsync(async (req, res, next) => {
   const merchants = await User.findById(req.user._id).select('merchants').populate('merchants');
 
+  console.log(merchants , "merchants");
   return res.status(200).json({
     status: 'success',
     data: merchants,

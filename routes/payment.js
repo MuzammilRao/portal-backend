@@ -7,6 +7,7 @@ const monerisController = require('../controller/paymentControllers/monerisContr
 const router = express.Router();
 
 router.route('/wi-stripe/create-payment').post(stripeController.createPaymentIntentWI);
+router.route('/wc-stripe/create-payment').post(stripeController.createPaymentIntentWC);
 router.route('/wizpub-stripe/create-payment').post(stripeController.createPaymentIntentWizPub);
 
 router.route('/wp-moneris/create-payment').post(monerisController.processPayment);
