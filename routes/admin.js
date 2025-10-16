@@ -22,6 +22,7 @@ router.delete('/brand/:id', adminController.deleteBrand);
 router.get('/user', adminController.getUsers);
 router.get('/user/:id', adminController.getUser);
 router.patch('/user/:id', adminController.updateUser);
+router.patch('/user/:id/reset-password', adminController.updateUserPassword);
 router.delete('/user/:id', adminController.deleteUser);
 router.patch('/approve-user/:id', adminController.approveUser);
 

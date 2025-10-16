@@ -201,6 +201,31 @@ exports.approveUser = CatchAsync(async (req, res, next) => {
 exports.getUsers = Factory.getAll(User, { isDeleted: false }, ['name', 'email', 'pseudo'], 'role');
 exports.getUser = Factory.getOne(User);
 exports.updateUser = Factory.updateOne(User);
+exports.updateUserPassword = CatchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const { newPassword } = req.body;
+
+  if (!newPassword) {
+    return next(new AppError('New password is required', 400));
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  const user = await User.findByIdAndUpdate(
+    id,
+    { password: hashedPassword },
+    { new: true, runValidators: true },
+  );
+
+  if (!user) {
+    return next(new AppError('User not found', 404));
+  }
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'Password updated successfully',
+  });
+});
 exports.deleteUser = Factory.deleteOne(User);
 
 // Clients
