@@ -347,13 +347,14 @@ exports.getInvoices = catchAsync(async (req, res, next) => {
       path: 'user',
       populate: { path: 'role', select: 'name' },
     })
-    .select('brandName clientName clientEmail invoiceNumber status createdAt merchant totalDue')
+    .select('brandName clientName clientEmail invoiceNumber status createdAt updatedAt merchant totalDue')
     .sort(req.query.sort || '-createdAt')
     .skip((parseInt(req.query.page, 10) - 1 || 0) * (parseInt(req.query.limit, 10) || 50))
     .limit(parseInt(req.query.limit, 10) || 50);
 
   const total = await Invoice.countDocuments(filter);
 
+  console.log('Invoices retrieved:', invoices);
   await logAction(req.user._id, LOG_ACTIONS.READ, 'Invoice', null);
 
   res.status(200).json({
